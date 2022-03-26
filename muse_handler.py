@@ -99,4 +99,5 @@ def harmonize(filename):
 
 
 if __name__ == '__main__':
-    harmonize('data/test.mid')
+    res = harmonize('data/test.mid')
+    res.show()

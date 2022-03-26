@@ -1,11 +1,14 @@
-from flask import Flask
+from flask import Flask, request
 from muse_handler import harmonize
 app = Flask(__name__)
 
 
-@app.route("/&lt;username&gt;", methods=['GET'])
-def index(username):
-    return "Hello, %s!" % username
+@app.route("/api/file", methods=['POST'])
+def index():
+    print(request.data)
+
+    result = ''
+    return result
 
 
 if __name__ == "__main__":
