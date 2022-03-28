@@ -1,23 +1,21 @@
-import re
-from flask import Flask, request, render_template, send_file
+from time import time
+from os import remove
+from flask import Flask, request, send_file
 from muse_handler import harmonize
-from music21 import note, stream, converter, chord
 app = Flask(__name__)
 
 
 @app.route("/api/file", methods=['POST'])
 def index():
     file = request.files.get('file')
-    file.save('res/' + file.filename)
+    tmp_filename = f'tmp_{file.filename}_{time()}.mid'
+    res_filename = f'res.mid'
+    file.save(tmp_filename)
 
-    p = harmonize("tmp.mid")
-    p.write('midi','res.mid')
-
-
-    
-    #p.plot()
-    return send_file('res.mid')
-
+    p = harmonize(tmp_filename)
+    p.write('midi', res_filename)
+    remove(tmp_filename)
+    return send_file(res_filename)
 
 
 if __name__ == "__main__":
