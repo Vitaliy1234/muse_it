@@ -12,90 +12,102 @@ HARMONY_RULES = [[1, 2, 3, 4, 5, 6],
 
 
 def harmonize(filename):
-    s = converter.parse(filename)
+    score = converter.parse(filename)
 
-    ton = s.analyze('key')
-    tons_list = [ton]
-    tons_list.extend(ton.alternateInterpretations)
-    # print(tons_list)
+    tone = score.analyze('key')
+    tones_list = [tone]
+    tones_list.extend(tone.alternateInterpretations)
 
-    tonic = ton.getChord(type='whole').pitches[0]
-    dom = ton.getChord(type='whole').pitches[4]
-    subdom = ton.getChord(type='whole').pitches[3]
-    parall_tonic = ton.getChord(type='whole').pitches[5]
-    parall_dom = ton.getChord(type='whole').pitches[2]
-    parall_subdom = ton.getChord(type='whole').pitches[1]
+    acc_p = stream.Part(id='accompany')
+    measure_num = 1
 
-    for key in tons_list:
-        acc_p = stream.Part(id='accompany')
-        measure_num = 1
-        last_step = 0
-        last_chord = key
+    print('key', tone)
 
-        print('key', key)
+    shift = 0
+    history = []
+    while True:
+        cur_measure = score.measure(measure_num).flat.notesAndRests
 
-        continue_flag = False
-        # step = key.getChord().pitches.index(last_chord.getChord().pitches[0])
-        #
-        # if step not in HARMONY_RULES[last_step]:
-        #     continue
-
-        # measure_num += 1
-        exit_flag = False
-        alternative_num = 0
-
-        while True:
-            if alternative_num > 5:
-                continue_flag = True
-                break
-            cur_ton = s.measure(measure_num).analyze('key')
-            chords = [cur_ton]
-            chords.extend(cur_ton.alternateInterpretations)
-            cur_chord = chords[alternative_num]
-
-            if cur_chord.getChord().pitches[0] not in key.getChord().pitches:
-                alternative_num += 1
-                continue
-
-            step = key.getChord().pitches.index(cur_chord.getChord().pitches[0])
-
-            if step not in HARMONY_RULES[last_step]:
-                alternative_num += 1
-                continue
-
-            alternative_num = 0
-            # print(last_chord, last_step)
-            print(cur_chord, cur_chord.correlationCoefficient, last_step)
-
-            # tonic = cur_chord.getChord(type='whole').pitches[0]
-            # dom = cur_chord.getChord(type='whole').pitches[4]
-            # subdom = cur_chord.getChord(type='whole').pitches[3]
-            # parall_tonic = cur_chord.getChord(type='whole').pitches[5]
-            # parall_dom = cur_chord.getChord(type='whole').pitches[2]
-            # parall_subdom = cur_chord.getChord(type='whole').pitches[1]
-
-            cur_measure = stream.Measure(number=measure_num)
-            cur_measure.append(chord.Chord([(cur_chord.getChord().root()), cur_chord.getChord().third, cur_chord.getChord().fifth], type='whole'))
-            # cur_measure.append(note.Note(cur_chord.getChord().third, type='whole'))
-            # cur_measure.append(note.Note(cur_chord.getChord().fifth, type='whole'))
-            acc_p.append(cur_measure)
-
-            try:
-                s.measure(measure_num + 1).analyze('key')
-            except Exception:
-                break
-
-            last_chord = cur_chord
-            last_step = step
+        # print('cur_measure', cur_measure)
+        if not cur_measure:
+            break
+        # на случай если затакт
+        if isinstance(cur_measure[0], note.Rest):
+            shift += 1
             measure_num += 1
-
-        if continue_flag:
+            history.append(-1)
             continue
 
-        s.insert(0, acc_p)
-        break
+        measure_chords = harmonize_measure(cur_measure, measure_num - shift, tone)
+        print('measure_chords', measure_chords)
 
-    return s
+        if len(measure_chords) > 1:
+            chord_to_add = measure_chords.intersection(HARMONY_RULES[history[-1]])
+
+            if not chord_to_add:
+                chord_to_add = measure_chords.pop()
+            else:
+                history.append(chord_to_add.pop())
+        else:
+            history.append(measure_chords.pop())
+
+        measure_num += 1
+
+    key_pitches = tone.pitches
+    for chord_num in history:
+        if chord_num == -1:
+            acc_p.append(note.Rest(type='whole'))
+        else:
+            acc_p.append(chord.Chord([key_pitches[chord_num],
+                                      get_third(key_pitches, chord_num),
+                                      get_fifth(key_pitches, chord_num)],
+                                     type='whole'))
+
+    score.insert(acc_p)
+
+    return score
+
+
+def harmonize_measure(measure, measure_num, key_tone):
+    """
+    Function for harmonize only ONE measure by ONE chord
+    :param measure:
+    :param measure_num:
+    :param key_tone:
+    :return: list of possible chords for the measure
+    """
+    key_notes = [str(n.name) for n in key_tone.getChord().notes]
+    if measure_num in [1, 8] and isinstance(measure[0], note.Note):
+        return {0}
+    else:
+        prev_chords = {0, 1, 2, 3, 4, 5, 6}
+        last_chord = 0
+
+        for elem in measure:
+            if isinstance(elem, note.Rest):
+                continue
+            try:
+                pitch_step = key_notes.index(str(elem.name))
+            except Exception as e:
+                continue
+
+            pitch_chords = [((pitch_step + i) % 7, chord.Chord([key_notes[(pitch_step + i) % 7],
+                                                                get_third(key_notes, pitch_step + i),
+                                                                get_fifth(key_notes, pitch_step + i)],
+                                                               )) for i in [-4, -2, 0]]
+            pitch_chords_num = set([elem[0] for elem in pitch_chords])
+            prev_chords.intersection_update(pitch_chords_num)
+            last_chord = pitch_chords_num
+
+        return prev_chords if prev_chords else last_chord
+
+
+def get_third(key_pitches, pitch_step):
+    return key_pitches[(pitch_step + 2) % 7]
+
+
+def get_fifth(key_pitches, pitch_step):
+    return key_pitches[(pitch_step + 4) % 7]
 
 
 if __name__ == '__main__':
