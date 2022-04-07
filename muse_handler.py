@@ -54,14 +54,18 @@ def harmonize(filename):
         measure_num += 1
 
     key_pitches = tone.pitches
+    measure_num = 1
     for chord_num in history:
+        cur_measure = stream.Measure(number=measure_num)
         if chord_num == -1:
-            acc_p.append(note.Rest(type='whole'))
+            cur_measure.append(note.Rest(type='whole'))
         else:
-            acc_p.append(chord.Chord([key_pitches[chord_num],
-                                      get_third(key_pitches, chord_num),
-                                      get_fifth(key_pitches, chord_num)],
-                                     type='whole'))
+            cur_measure.append(chord.Chord([key_pitches[chord_num],
+                                            get_third(key_pitches, chord_num),
+                                            get_fifth(key_pitches, chord_num)],
+                                           type='whole'))
+        acc_p.append(cur_measure)
+        measure_num += 1
 
     score.insert(acc_p)
 
