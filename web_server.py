@@ -1,7 +1,9 @@
 from time import time
 from os import remove
 from flask import Flask, request, send_file
+
 from muse_handler import harmonize, bach_style
+from gpt2_model.sample import make_bach_chorale
 app = Flask(__name__)
 
 
@@ -18,7 +20,7 @@ def index():
         p = harmonize(tmp_filename)
         p.write('midi', res_filename)
     elif generatorStyle == 'bach':
-        res_filename = bach_style(tmp_filename)
+        res_filename = make_bach_chorale(tmp_filename, res_filename)
 
     remove(tmp_filename)
     return send_file(res_filename)
