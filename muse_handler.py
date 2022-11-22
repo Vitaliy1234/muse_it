@@ -1,7 +1,6 @@
 from music21 import note, stream, converter, chord
 from music21.analysis.discrete import DiscreteAnalysisException
-import inference_utils
-from tensorflow import keras
+# import inference_utils
 
 HARMONY_RULES = [[1, 2, 3, 4, 5, 6],
                  [0, 2, 4],
@@ -115,13 +114,13 @@ def get_fifth(key_pitches, pitch_step):
     return key_pitches[(pitch_step + 4) % 7]
 
 
-def bach_style(filename):
-    generator = keras.models.load_model('generator_bach.h5')
-    result_path = inference_utils.generate_midi(generator, 'output', filename)
-    return result_path
+# def bach_style(filename):
+#     generator = keras.models.load_model('generator_bach.h5')
+#     result_path = inference_utils.generate_midi(generator, 'output', filename)
+#     return result_path
 
 
-if __name__ == '__main__':
-    bach_style('data/test.mid')
-    # res = harmonize('data/test.mid')
-    # res.show()
+# if __name__ == '__main__':
+#     bach_style('data/test.mid')
+#     # res = harmonize('data/test.mid')
+#     # res.show()

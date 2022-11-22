@@ -16,7 +16,7 @@
 
 import note_seq
 import random
-from helpers.noteseqhelpers import (
+from gpt2_model.helpers.noteseqhelpers import (
     empty_note_sequence,
     NOTE_LENGTH_16TH_120BPM,
     BAR_LENGTH_120BPM

@@ -1,12 +1,12 @@
 import os
-from helpers import logging
+from gpt2_model.helpers import logging
 from pathlib import Path
 
 from transformers import GPT2LMHeadModel
 from transformers import PreTrainedTokenizerFast
 
-from helpers.samplinghelpers import *
-from data_preparation import extract_notes, converter
+from gpt2_model.helpers.samplinghelpers import *
+from gpt2_model.data_preparation import extract_notes, converter
 
 logger = logging.create_logger("sampling")
 
@@ -86,11 +86,11 @@ def concat_gen_list(generated_list):
 
 
 def sample(priming_sample_file, result_file):
-    tokenizer_path = os.path.join("gpt2model_2_bars", "tokenizer.json")
+    tokenizer_path = os.path.join("/app/gpt2_model/gpt2model_2_bars", "tokenizer.json")
     tokenizer = PreTrainedTokenizerFast(tokenizer_file=tokenizer_path)
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
-    model_path = os.path.join("gpt2model_2_bars", "best_model")
+    model_path = os.path.join("/app/gpt2_model/gpt2model_2_bars", "best_model")
     model = GPT2LMHeadModel.from_pretrained(model_path)
 
     logger.info("Model loaded.")

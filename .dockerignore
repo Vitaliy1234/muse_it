@@ -1,0 +1,6 @@
+/museit_env/
+/venv/
+/.idea/
+/__pycache__/
+/.git/
+.gitignore
