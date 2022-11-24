@@ -9,6 +9,7 @@ from gpt2_model.helpers.samplinghelpers import *
 from gpt2_model.data_preparation import extract_notes, converter
 
 logger = logging.create_logger("sampling")
+CUR_FILE_PATH = os.path.dirname(__file__)
 
 
 def generate_music(priming_sample_custom, model, tokenizer):
@@ -86,21 +87,28 @@ def concat_gen_list(generated_list):
 
 
 def sample(priming_sample_file, result_file):
-    tokenizer_path = os.path.join("/app/gpt2_model/gpt2model_2_bars", "tokenizer.json")
+    """
+    Генерация аккомпанемента по данной мелодии
+    :param priming_sample_file: файл с исходной мелодией в текстовом виде
+    :param result_file: файл, куда надо положить результат генерации в формате midi
+    :return: нет возвращаемого значения
+    """
+    tokenizer_path = os.path.join(CUR_FILE_PATH, "gpt2model_4_bars", "tokenizer.json")
     tokenizer = PreTrainedTokenizerFast(tokenizer_file=tokenizer_path)
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
-    model_path = os.path.join("/app/gpt2_model/gpt2model_2_bars", "best_model")
+    model_path = os.path.join(CUR_FILE_PATH, "gpt2model_4_bars", "best_model")
     model = GPT2LMHeadModel.from_pretrained(model_path)
 
     logger.info("Model loaded.")
     with open(priming_sample_file, 'r') as hfile:
         priming_sample = hfile.read()
 
+    # генерируем список двутактовых кусочков мелодии
     generated_list = generate_music(priming_sample, model, tokenizer)
-
+    # соединяем все в единое целое
     full_generation = concat_gen_list(generated_list)
-
+    # преобразовываем текст в midi и сохраняем в файл
     note_seq.note_sequence_to_midi_file(token_sequence_to_note_sequence(full_generation), result_file)
 
 
@@ -130,7 +138,7 @@ def make_bach_chorale(filename, res_filename):
 
 
 if __name__ == '__main__':
-    filename = os.path.join('../data', 'test.mid')
+    filename = os.path.join('../data', 'v_lesu_elka.mid')
 
     split_path = os.path.split(filename)
 

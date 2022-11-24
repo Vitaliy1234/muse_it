@@ -56,7 +56,12 @@ def create_dir_tree(section, run_id, music_name):
 
 
 def preprocess_score(score):
-    cur_piece_str = [PIECE_START]
+    """
+    Обработка мелодии
+    :param score: исходная мелодия, считанная из midi файла
+    :return: текстовое представление исходной мелодии
+    """
+    cur_piece_str = [PIECE_START]  # переменная с текстовым представлением мелодии
     cur_piece = {}
     meta_info = {}
     track_list = []
@@ -67,17 +72,21 @@ def preprocess_score(score):
         cur_piece_str.extend(cur_track_str)
         cur_piece_str.append(TRACK_END)
 
-    # print(track_list)
     cur_piece['MUSIC'] = track_list
-
-    # cur_piece_str.append(PIECE_END)
 
     return cur_piece_str
 
 
 def preprocess_track(track, meta_info):
+    """
+    Обработка одной дорожки музыкальной композиции
+    :param track: исходная дорожка
+    :param meta_info: информация о тональности и размере мелодии в дорожке
+    :return: текстовое представление дорожки
+    """
     track_txt = [f'{INSTRUMENT}=0', 'DENSITY=1']
-    # read current track
+
+    # считываем текущую дорожку
     for elem_part in track:
         if isinstance(elem_part, music21.instrument.Instrument):
             if str(elem_part) not in INSTR_DICT.keys():
@@ -95,7 +104,7 @@ def preprocess_track(track, meta_info):
                         raise ValueError('Key or time signature was changed')
 
             cur_bar_time_sig = meta_info['Beat count']
-            # case when there is empty bar
+            # обработка случая пустого такта
             if not cur_bar_info['bar_txt']:
                 track_txt.append(f'{TIME_SHIFT}={cur_bar_time_sig * 4}')
             else:
@@ -110,12 +119,17 @@ def preprocess_track(track, meta_info):
 
 
 def preprocess_bar(bar):
+    """
+    Обработка такта
+    :param bar: исходный такт
+    :return: текстовое представление такта
+    """
     bar_txt = []
     bar_dict = {}
 
-    prev_beat = 1.0
+    prev_offset = 0.0
     prev_duration = 0.0
-    # read measure
+    # считываем такт
     for elem_measure in bar:
         if isinstance(elem_measure, music21.key.Key):
             bar_dict['Key'] = str(elem_measure.asKey())
@@ -132,19 +146,18 @@ def preprocess_bar(bar):
                              f'{TIME_SHIFT}={elem_measure.duration.quarterLength * 4}',
                              f'{NOTE_OFF}={elem_measure.pitch.midi}']
 
-                cur_elem_duration = elem_measure.duration.quarterLength
+                cur_offset = elem_measure.offset
 
-                if elem_measure.beat - prev_duration > prev_beat:
-                    shift_duration = elem_measure.beat - prev_duration - prev_beat
+                if cur_offset - prev_offset > 0:
+                    shift_duration = cur_offset - prev_offset
 
                     bar_txt.append(f'{TIME_SHIFT}='
                                    f'{shift_duration * 4}')
 
-                    prev_duration += shift_duration
+                    prev_offset = cur_offset
 
                 bar_txt.extend(note_list)
-                prev_duration += cur_elem_duration
-                prev_beat += elem_measure.beat
+                prev_offset += elem_measure.duration.quarterLength
 
         else:
             pass
