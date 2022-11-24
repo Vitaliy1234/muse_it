@@ -14,7 +14,7 @@ app = Flask(__name__)
 def index():
     file = request.files.get('file')
     tmp_filename = f'tmp_{file.filename}_{time()}.mid'
-    res_filename = f'res{file.filename}.mid' #restest.mid.mid #res/test.mid
+    res_filename = f'res{file.filename}.mid'  # restest.mid.mid #res/test.mid
     # res_filename = os.path.join('res', file.filename)
     print(f'res_filename {res_filename}')
     print(f'tmp_filename {tmp_filename}')
@@ -30,6 +30,7 @@ def index():
 
     remove(tmp_filename)
     return send_file(res_filename)
+
 
 @app.route('/')
 def home():
