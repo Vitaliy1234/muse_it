@@ -25,7 +25,7 @@ def generate_music(priming_sample_custom, model, tokenizer):
     for idx, token in enumerate(priming_sample_tokens):
         if token == 'BAR_END':
             bar_counter += 1
-        if bar_counter == 2:
+        if bar_counter == 4:
             cur_sample = priming_sample_tokens[prev_2_bar_idx:idx + 1]
             cur_sample.append('TRACK_END')
             cur_sample = ' '.join(cur_sample)
@@ -40,7 +40,7 @@ def generate_music(priming_sample_custom, model, tokenizer):
 
             prev_2_bar_idx = idx + 1
 
-    if bar_counter == 1:
+    if 0 < bar_counter < 4:
         cur_sample = priming_sample_tokens[prev_2_bar_idx:idx + 1]
         cur_sample.append('TRACK_END')
         cur_sample = ' '.join(cur_sample)
@@ -138,7 +138,7 @@ def make_bach_chorale(filename, res_filename):
 
 
 if __name__ == '__main__':
-    filename = os.path.join('../data', 'v_lesu_elka.mid')
+    filename = os.path.join('../data', 'last_year_snow.mid')
 
     split_path = os.path.split(filename)
 
